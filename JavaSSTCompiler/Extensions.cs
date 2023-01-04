@@ -1,4 +1,4 @@
-﻿using JavaSSTCompiler.Tokenizer;
+﻿using JavaSST.Tokenizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JavaSSTCompiler
+namespace JavaSST
 {
   public static class Extensions
   {
@@ -17,5 +17,7 @@ namespace JavaSSTCompiler
       return field.GetCustomAttribute<TokenizerRuleAttribute>();
     }
     
+    public static byte[] ToBigEndian(this ushort value) => BitConverter.GetBytes(value).Reverse().ToArray();
+
   }
 }

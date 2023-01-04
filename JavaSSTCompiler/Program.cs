@@ -1,9 +1,9 @@
 ﻿using Antlr4.Runtime;
-using JavaSSTCompiler;
-using JavaSSTCompiler.Parser;
-using JavaSSTCompiler.Tokenizer;
+using JavaSST;
+using JavaSST.Parser;
+using JavaSST.Tokenizer;
 using System.CommandLine;
-using Parser = JavaSSTCompiler.Parser.Parser;
+using Parser = JavaSST.Parser.Parser;
 
 namespace JavaSST
 {

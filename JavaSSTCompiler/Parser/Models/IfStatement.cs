@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JavaSSTCompiler.Parser.Models
+namespace JavaSST.Parser.Models
 {
   internal class IfStatement : IStatement
   {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JavaSSTCompiler.Tokenizer
+namespace JavaSST.Tokenizer
 {
   [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
   public class TokenizerRuleAttribute : Attribute

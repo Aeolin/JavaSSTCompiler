@@ -1,12 +1,12 @@
-﻿using JavaSSTCompiler.Parser.Models;
-using JavaSSTCompiler.Tokenizer;
+﻿using JavaSST.Parser.Models;
+using JavaSST.Tokenizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JavaSSTCompiler.Parser
+namespace JavaSST.Parser
 {
   public class Parser
   {
