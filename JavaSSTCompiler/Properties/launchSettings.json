@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "JavaSSTCompiler": {
+      "commandName": "Project",
+      "commandLineArgs": "-i ./Resources/program.java -o program.class"
+    }
+  }
+}
