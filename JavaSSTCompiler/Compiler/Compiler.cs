@@ -14,15 +14,15 @@ namespace JavaSST.Compiler
       
     }
 
-    public void Compile(BigEndianBinaryWriter writer, Class clazz)
-    {
-      var ctx = new CompilerContext(writer);
-      compileClass(clazz, ctx);
-    }
+    //public void Compile(ConstantPoolBinaryWriter writer, Class clazz)
+    //{
+    //  var ctx = new CompilerContext(writer);
+    //  compileClass(clazz, ctx);
+    //}
     
-    private void compileClass(Class clazz, CompilerContext ctx)
-    {
+    //private void compileClass(Class clazz, CompilerContext ctx)
+    //{
       
-    }
+    //}
   }
 }

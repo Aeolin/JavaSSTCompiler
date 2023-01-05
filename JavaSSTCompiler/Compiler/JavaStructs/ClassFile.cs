@@ -1,4 +1,5 @@
 ﻿using JavaSST.Parser.Models;
+using JavaSSTCompiler.Compiler.Builder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace JavaSST.JavaStructs
 {
-  public class ClassFile
+    public class ClassFile
   {
     public ClassFile(Class @class)
     {

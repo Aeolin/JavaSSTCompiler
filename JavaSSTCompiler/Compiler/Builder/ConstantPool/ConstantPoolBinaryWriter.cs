@@ -5,19 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JavaSST
+namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
 {
-  public class BigEndianBinaryWriter : BinaryWriter
+  public class ConstantPoolBinaryWriter : BinaryWriter
   {
-    public BigEndianBinaryWriter(Stream stream) : base(stream)
+    public ConstantPoolBinaryWriter(Stream stream) : base(stream)
     {
     }
 
-    public BigEndianBinaryWriter(Stream stream, Encoding encoding) : base(stream, encoding)
+    public ConstantPoolBinaryWriter(Stream stream, Encoding encoding) : base(stream, encoding)
     {
     }
 
-    public BigEndianBinaryWriter(Stream stream, Encoding encoding, bool leaveOpen) : base(stream, encoding, leaveOpen)
+    public ConstantPoolBinaryWriter(Stream stream, Encoding encoding, bool leaveOpen) : base(stream, encoding, leaveOpen)
     {
     }
 
@@ -96,10 +96,49 @@ namespace JavaSST
         Write(chars[i]);
     }
 
+    public void Write(AbstractSerializable serializable) => Write(serializable.ToBytes());
+
     public override void Write(string value)
     {
-      foreach (var c in value)
-        Write(c);
+      var pos = this.BaseStream.Position;
+      Write((ushort)0);
+      ushort count = 0;
+      for (int i = 0; i < value.Length; i++)
+      {
+        var c = char.ConvertToUtf32(value, i);
+        if (c > 0xFFFF)
+          i++;
+
+        count++;
+        if (c >= 0x0001 && c <= 0x007F)
+        { 
+          Write((byte)c);
+        }
+        else if (c == 0x0000 || (c >= 0x0080 && c <= 0x07FF))
+        {
+          Write((byte)(0xC0 | (0x1F & (c >> 6))));
+          Write((byte)(0x80 | (0x3F & c)));
+        }
+        else if (c >= 0x0800 && c <= 0xFFFF)
+        {
+          Write((byte)(0xE0 | (0x0F & (c >> 12))));
+          Write((byte)(0x80 | (0x3F & (c >> 6))));
+          Write((byte)(0x80 | (0x3F & c)));
+        }
+        else if (c > 0xFFFF)
+        {
+          Write((byte)0xED);
+          Write((byte)value[i] >> 8);
+          Write((byte)value[i]);
+          Write((byte)0xED);
+          Write((byte)value[i+1] >> 8);
+          Write((byte)value[i+1]);
+        } 
+      }
+      var newPos = this.BaseStream.Position;
+      this.BaseStream.Seek(pos, SeekOrigin.Begin);
+      Write(count);
+      this.BaseStream.Seek(newPos, SeekOrigin.Begin);
     }
   }
 }

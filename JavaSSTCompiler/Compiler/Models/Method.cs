@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace JavaSST.Compiler.Models
 {
-  public class Method : AbstractConstantPoolReferenced
+  public class Method
   {
-    public Method(string name, string returnType, ConstantPoolInfo info) : base(info)
+    public Method(string name, string returnType)
     {
       Name=name;
       ReturnType=returnType;

@@ -40,7 +40,7 @@ namespace JavaSST.Compiler
     public Variable MakeVariable(ConstantPoolInfo classInfo, FinalField field, CompilerContext ctx)
     {
       var info = ConstantPoolInfo.FieldRefInfo(classInfo, field, ctx);
-      var variable = new Variable(field.Identifier, field.Type.Value, false, info);
+      var variable = new Variable(field.Identifier, "I", false, info);
       Variables.Add(variable.Name, variable);
       return variable;
     }

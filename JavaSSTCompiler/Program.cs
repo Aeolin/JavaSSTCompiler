@@ -2,6 +2,7 @@
 using JavaSST;
 using JavaSST.Parser;
 using JavaSST.Tokenizer;
+using JavaSSTCompiler.Compiler.Builder.ConstantPool;
 using System.CommandLine;
 using Parser = JavaSST.Parser.Parser;
 
@@ -25,11 +26,12 @@ namespace JavaSST
       if (output == null)
         output = new FileInfo(Path.ChangeExtension(input.FullName, ".class"));
 
-      var tokenizer = new Tokenizer();
+      var tokenizer = new Tokenizer.Tokenizer();
       var tokens = tokenizer.Tokenize(input.OpenRead()).ToArray();
-      var parser = new Parser();
+      var parser = new Parser.Parser();
       var ast = parser.Parse(tokens);
 
+      
       //var lexer = new java_sstLexer(input);
       //var tokens = new CommonTokenStream(lexer);
       //var parser = new java_sstParser(tokens);
