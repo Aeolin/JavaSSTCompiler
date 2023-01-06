@@ -1,5 +1,4 @@
-﻿using JavaSST.JavaStructs;
-using JavaSSTCompiler.Compiler.Models;
+﻿using JavaSSTCompiler.Compiler.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
