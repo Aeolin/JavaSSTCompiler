@@ -1,4 +1,4 @@
-class Penis {
+class Test {
     final int var1 = meth2(2, 3);
     final int var2 = 2 + var1;
     final int var3 = 127;

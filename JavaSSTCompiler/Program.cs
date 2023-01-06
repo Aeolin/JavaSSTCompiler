@@ -32,19 +32,8 @@ namespace JavaSST
       var parser = new Parser.Parser();
       var ast = parser.Parse(tokens);
       var compiler = new Compiler.Compiler();
-      compiler.Compile(ast);
-
-      //var lexer = new java_sstLexer(input);
-      //var tokens = new CommonTokenStream(lexer);
-      //var parser = new java_sstParser(tokens);
-      //var tree = parser.class_();
-      //var visitor = new JavaSSTVisitor();
-      //var result = visitor.Visit(tree);
-
-      //using (var writer = new BigEndianBinaryWriter(output.Create()))
-      //{
-
-      //}
+      var bytecode = compiler.Compile(ast);
+      File.WriteAllBytes(output.FullName, bytecode);
     }
   }
 }

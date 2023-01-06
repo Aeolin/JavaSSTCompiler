@@ -17,12 +17,12 @@ namespace JavaSST.Compiler
 
     }
 
-    public void Compile(Class clazz)
+    public byte[] Compile(Class clazz)
     {
       var builder = ClassBuilder.Create();
       compileClass(builder, clazz);
       var data = builder.Compile();
-      File.WriteAllBytes("penis.class", data);
+      return data;
     }
 
     private void compileClass(ClassBuilder builder, Class clazz)
