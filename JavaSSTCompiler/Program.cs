@@ -1,5 +1,6 @@
 ﻿using Antlr4.Runtime;
 using JavaSST;
+using JavaSST.Compiler;
 using JavaSST.Parser;
 using JavaSST.Tokenizer;
 using JavaSSTCompiler.Compiler.Builder.ConstantPool;
@@ -30,8 +31,9 @@ namespace JavaSST
       var tokens = tokenizer.Tokenize(input.OpenRead()).ToArray();
       var parser = new Parser.Parser();
       var ast = parser.Parse(tokens);
+      var compiler = new Compiler.Compiler();
+      compiler.Compile(ast);
 
-      
       //var lexer = new java_sstLexer(input);
       //var tokens = new CommonTokenStream(lexer);
       //var parser = new java_sstParser(tokens);
@@ -41,7 +43,7 @@ namespace JavaSST
 
       //using (var writer = new BigEndianBinaryWriter(output.Create()))
       //{
-        
+
       //}
     }
   }

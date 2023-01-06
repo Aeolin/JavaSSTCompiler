@@ -185,9 +185,6 @@ namespace JavaSST.Parser
       }
     }
 
-
-
-
     private Token parseComparison(ParserContext ctx) => ctx.NextOptional(TokenType.Equal, TokenType.LessOrEqual, TokenType.LessThan, TokenType.GreaterThan, TokenType.GreaterOrEqual);
 
     private Expression parseExpression(ParserContext ctx)

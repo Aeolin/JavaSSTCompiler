@@ -45,13 +45,13 @@ namespace JavaSST.Compiler
       return variable;
     }
 
-    public Method MakeMethod(ConstantPoolInfo classInfo, JavaSST.Parser.Models.Method method, CompilerContext ctx)
-    {
-      var info = ConstantPoolInfo.MethodRefInfo(classInfo, method, ctx);
-      var result = new Method(method.Identifier, method.ReturnType.Type == Tokenizer.TokenType.Void ? "V" : "I", info);
-      Methods.Add(result.Name, result);
-      return result;
-    }
+    //public Method MakeMethod(ConstantPoolInfo classInfo, JavaSST.Parser.Models.Method method, CompilerContext ctx)
+    //{
+    //  var info = ConstantPoolInfo.MethodRefInfo(classInfo, method, ctx);
+    //  var result = new Method(method.Identifier, method.ReturnType.Type == Tokenizer.TokenType.Void ? "V" : "I", info);
+    //  Methods.Add(result.Name, result);
+    //  return result;
+    //}
 
 
     public BinaryWriter Writer { get; init; }

@@ -15,7 +15,7 @@ namespace JavaSSTCompiler.Compiler.Builder
 
     static AbstractSerializable()
     {
-      var methods = typeof(BinaryWriter)
+      var methods = typeof(ConstantPoolBinaryWriter)
         .GetMethods(BindingFlags.Public | BindingFlags.Instance)
         .Where(x => x.Name == "Write" && x.GetParameters().Length == 1);
 
@@ -40,8 +40,13 @@ namespace JavaSSTCompiler.Compiler.Builder
         {
           var elementType = property.attr.Type ?? property.prop.PropertyType.GetElementType();
           var value = (Array)property.prop.GetValue(this);
+
           if (property.attr.PrefixLenType != null)
-            WRITE[property.attr.PrefixLenType].Invoke(writer, new[] { Convert.ChangeType(value.LongLength, property.attr.PrefixLenType) });
+            WRITE[property.attr.PrefixLenType].Invoke(writer, new[] { Convert.ChangeType(value?.LongLength ?? 0, property.attr.PrefixLenType) });
+
+          if (value == null)
+            continue;
+
 
           if (elementType == typeof(byte))
           {
@@ -50,7 +55,13 @@ namespace JavaSSTCompiler.Compiler.Builder
           else
           {
             foreach (var item in value)
-              WRITE[elementType].Invoke(writer, new[] { Convert.ChangeType(item, elementType) });
+            {
+              var obj = item;
+              if(elementType != obj.GetType() && elementType.IsAssignableTo(typeof(IConvertible)))
+                obj = Convert.ChangeType(item, elementType);
+
+              WRITE[elementType].Invoke(writer, new[] { obj });
+            }
           }
 
         }

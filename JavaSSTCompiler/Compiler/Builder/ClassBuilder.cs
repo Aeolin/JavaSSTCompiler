@@ -19,12 +19,16 @@ namespace JavaSSTCompiler.Compiler.Builder
     public AccessFlags AccessFlags { get; private set; } = AccessFlags.Public;
     
     private ClassInfo _thisClass;
+    public ClassInfo ThisClassInfo => _thisClass;
+    
     private ClassInfo _superClass;
+    public ClassInfo SuperClassInfo => _superClass;
 
     private ConstantPool.ConstantPool _constantPool = new ConstantPool.ConstantPool();
+    public ConstantPool.ConstantPool ConstantPool => _constantPool;
 
     private List<FieldInfo> _fields = new List<FieldInfo>();
-    private List<MethodInfo> _methods = new List<MethodInfo>();
+    private Dictionary<string, MethodInfo> _methods = new Dictionary<string, MethodInfo>();
     
     public static ClassBuilder Create() => new ClassBuilder();
 
@@ -32,6 +36,12 @@ namespace JavaSSTCompiler.Compiler.Builder
     {
     }
 
+    public RefInfo GetMethodRef(string methodName)
+    {
+      var method = _methods[methodName];
+      return _constantPool.MethodRefInfo(_thisClass, _constantPool.GetInfo<Utf8Info>(method.NameIndex), _constantPool.GetInfo<Utf8Info>(method.DescriptorIndex));
+    }
+    
     public ClassBuilder WithName(string name)
     {
       Name = name;
@@ -66,17 +76,19 @@ namespace JavaSSTCompiler.Compiler.Builder
     {
       var builder = new MethodDescriptorBuilder();
       builderAction(builder);
-      _methods.Add(new MethodInfo(flags, _constantPool.Utf8Info(name), _constantPool.Utf8Info(builder.Build())));
+      _methods.Add(name, new MethodInfo(flags, _constantPool.Utf8Info(name), _constantPool.Utf8Info(builder.Build())));
       return this;
     }
 
     public ClassBuilder MethodBody(string name, string returnType, IEnumerable<(string type, string name)> parameters, Action<CodeBuilder> builderAction)
     {
-      var method = new Method(name, returnType) { Parameters = parameters.Select(x => new Parameter { Name = x.name, Type = x.type }).ToArray() };
-      var builder = new CodeBuilder(_constantPool, method, _thisClass);
+      var method = new Method(name, returnType) { Parameters = parameters == null ? new Parameter[0] : parameters.Select(x => new Parameter { Name = x.name, Type = x.type }).ToArray() };
+      var builder = new CodeBuilder(this, method);
       builderAction(builder);
       var code = builder.Build();
-      var attribute = new CodeAttribute(_constantPool) { Code = code };
+      var attribute = new CodeAttribute(_constantPool) { Code = code, MaxLocals = builder.MaxLocals, MaxStack = builder.MaxStack };
+      _methods[name].AddAttribute(attribute);
+      return this;
     }
 
 
@@ -84,9 +96,9 @@ namespace JavaSSTCompiler.Compiler.Builder
     {
       using var mem = new MemoryStream();
       using var writer = new ConstantPoolBinaryWriter(mem);
-      writer.Write(0xBEBAFECA);
-      writer.Write((ushort)51);
+      writer.Write(0xCAFEBABE);
       writer.Write((ushort)0);
+      writer.Write((ushort)51);
       writer.Write(_constantPool.ToBytes());
       writer.Write((ushort)AccessFlags);
       writer.Write(_thisClass.Index);
@@ -96,7 +108,7 @@ namespace JavaSSTCompiler.Compiler.Builder
       foreach (var field in _fields)
         writer.Write(field.ToBytes());
       writer.Write((ushort)_methods.Count);
-      foreach (var method in _methods)
+      foreach (var method in _methods.Values)
         writer.Write(method.ToBytes());
       writer.Write((ushort)0); // no attributes
       return mem.ToArray();

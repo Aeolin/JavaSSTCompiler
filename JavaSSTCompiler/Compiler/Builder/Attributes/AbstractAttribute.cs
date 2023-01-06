@@ -1,4 +1,5 @@
-﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
+﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool;
+using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,12 +21,12 @@ namespace JavaSSTCompiler.Compiler.Builder.Attributes
     public override byte[] ToBytes()
     {
       using var mem = new MemoryStream();
-      using var writer = new BinaryWriter(mem);
+      using var writer = new ConstantPoolBinaryWriter(mem);
       writer.Write(AttributeNameIndex);
       var bytes = base.ToBytes();
       writer.Write((uint)bytes.LongLength);
       writer.Write(bytes);
-      return base.ToBytes();
+      return mem.ToArray();
     }
   }
 }

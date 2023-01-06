@@ -1,4 +1,4 @@
-class Test {
+class Penis {
     final int var1 = meth2(2, 3);
     final int var2 = 2 + var1;
     final int var3 = 127;
@@ -40,6 +40,21 @@ class Test {
         return;
     }
     
+    public void meth3() 
+    {
+        int m1;
+        int m2;
+        int m3;
+        
+        m1 = 10;
+        m2 = 20;
+        m3 = 0;
+        while(m1 < m2) {
+          m1 = m1 + 1;
+        }
+        return;
+    }
+
     public int meth2(int m, int n) {
         return m * n + (m/n);
     }

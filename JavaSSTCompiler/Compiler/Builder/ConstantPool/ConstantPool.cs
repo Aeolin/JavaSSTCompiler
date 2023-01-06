@@ -15,7 +15,7 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
 
     public ConstantPool()
     {
-      _infos.Add(null);
+
     }
 
     public ushort NextIndex()
@@ -32,11 +32,16 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
     public byte[] ToBytes()
     {
       using var stream = new MemoryStream();
-      stream.Write(BitConverter.GetBytes((ushort)_infos.Count).Reverse().ToArray());
+      stream.Write(BitConverter.GetBytes((ushort)(_infos.Count+1)).Reverse().ToArray());
       foreach (var info in _infos.OrderBy(x => x.Index))
         stream.Write(info.ToBytes());
 
       return stream.ToArray();
+    }
+
+    public T GetInfo<T>(ushort index) where T : AbstractConstantPoolInfo
+    {
+      return (T)_infos.FirstOrDefault(x => x.Index == index);
     }
 
     public Utf8Info Utf8Info(string value)
@@ -58,6 +63,19 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
       if (info == null)
       {
         info = new ClassInfo(nameInfo, NextIndex());
+        _infos.Add(info);
+      }
+
+      return info;
+    }
+
+    public RefInfo MethodRefInfo(ClassInfo classInfo, Utf8Info name, Utf8Info descriptor)
+    {
+      var nani = NameAndTypeIndex(name, descriptor);
+      var info = _infos.OfType<RefInfo>().FirstOrDefault(x => x.ClassIndex == classInfo.Index && x.NameAndTypeIndex == name.Index && x.Tag == ConstantPoolTag.MethodRef);
+      if (info == null)
+      {
+        info = new RefInfo(classInfo, nani, ConstantPoolTag.MethodRef, NextIndex());
         _infos.Add(info);
       }
 
@@ -105,6 +123,18 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
     {
       var nameInfo = Utf8Info(name);
       var typeInfo = Utf8Info(type);
+      var info = _infos.OfType<NameAndTypeIndex>().FirstOrDefault(x => x.TypeIndex == typeInfo.Index && x.NameIndex == nameInfo.Index);
+      if (info == null)
+      {
+        info = new NameAndTypeIndex(nameInfo, typeInfo, NextIndex());
+        _infos.Add(info);
+      }
+
+      return info;
+    }
+
+    public NameAndTypeIndex NameAndTypeIndex(Utf8Info nameInfo, Utf8Info typeInfo)
+    {
       var info = _infos.OfType<NameAndTypeIndex>().FirstOrDefault(x => x.TypeIndex == typeInfo.Index && x.NameIndex == nameInfo.Index);
       if (info == null)
       {
