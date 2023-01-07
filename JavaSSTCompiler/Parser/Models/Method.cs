@@ -14,6 +14,8 @@ namespace JavaSST.Parser.Models
       this.ReturnType = returnType;
     }
 
+
+    public string Signature => $"{Identifier}({string.Join(":", Parameters.Select(p => p.Type.Value))})";
     public Token ReturnType { get; set; }
     public FormalParameter[] Parameters { get; set; }
     public MethodBody Body { get; set; }

@@ -23,7 +23,9 @@ namespace JavaSSTCompiler.Compiler.Builder.Structs
     [Field(3, typeof(AbstractSerializable), PrefixLenType = typeof(ushort))]
     public AbstractAttribute[] Attributes { get; private set; }
     
-    
+    // only for internal compiler usage
+    public string Name { get; set; }
+
     public MethodInfo(AccessFlags accessFlags, Utf8Info nameInfo, Utf8Info descriptorInfo)
     {
       AccessFlags = (ushort)accessFlags;

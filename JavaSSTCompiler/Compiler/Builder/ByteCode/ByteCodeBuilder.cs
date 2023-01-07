@@ -206,7 +206,7 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
         }
         else
         {
-          _writer.WriteByte(0x21);
+          _writer.WriteByte(0x15);
           _writer.WriteByte((byte)index);
         }
       }

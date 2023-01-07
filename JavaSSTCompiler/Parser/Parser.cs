@@ -315,6 +315,10 @@ namespace JavaSST.Parser
         call.Arguments.Add(parseExpression(ctx));
       }
       ctx.NextAndValidate("expected closed paranthesis", TokenType.RParen);
+      /* works only in a JavaSST context where every method parameter must be an int
+         requires more intesive reworking to figure out method signature by analysing
+         the parsed expressions and their types */ 
+      call.MethodSignature = $"{identifier.Value}({string.Join(":", call.Arguments.Select(x => "int"))})"; 
       return call;
     }
 

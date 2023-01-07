@@ -2,7 +2,7 @@
   "profiles": {
     "JavaSSTCompiler": {
       "commandName": "Project",
-      "commandLineArgs": "-i ./Resources/program.java -o test.class"
+      "commandLineArgs": "-i ./Resources/a.java -o a.class"
     }
   }
 }

@@ -12,6 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\a.java">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\program.java">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

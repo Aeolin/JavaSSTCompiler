@@ -20,22 +20,22 @@ namespace JavaSSTCompiler.Compiler.Builder
     public string SuperClass { get; private set; }
     public string CodeFile { get; private set; }
     public AccessFlags AccessFlags { get; private set; } = AccessFlags.Public;
-    
+
     private ClassInfo _thisClass;
     public ClassInfo ThisClassInfo => _thisClass;
-    
+
     private ClassInfo _superClass;
     public ClassInfo SuperClassInfo => _superClass;
 
     private ConstantPool.ConstantPool _constantPool = new ConstantPool.ConstantPool();
     public ConstantPool.ConstantPool ConstantPool => _constantPool;
 
-    private List<FieldInfo> _fields = new List<FieldInfo>();
+    private Dictionary<string, FieldInfo> _fields = new Dictionary<string, FieldInfo>();
     private Dictionary<string, MethodInfo> _methods = new Dictionary<string, MethodInfo>();
-    
+
     public static ClassBuilder Create() => new ClassBuilder();
 
-    private ClassBuilder() 
+    private ClassBuilder()
     {
     }
 
@@ -44,7 +44,7 @@ namespace JavaSSTCompiler.Compiler.Builder
       var method = _methods[methodName];
       return _constantPool.MethodRefInfo(_thisClass, _constantPool.GetInfo<Utf8Info>(method.NameIndex), _constantPool.GetInfo<Utf8Info>(method.DescriptorIndex));
     }
-    
+
     public ClassBuilder WithName(string name)
     {
       Name = name;
@@ -70,25 +70,29 @@ namespace JavaSSTCompiler.Compiler.Builder
     {
       var builder = new FieldDescriptorBuilder();
       builderAction(builder);
-      _fields.Add(new FieldInfo(flags, _constantPool.Utf8Info(name), _constantPool.Utf8Info(builder.Build())));
+      _fields.Add(name, new FieldInfo(flags, _constantPool.Utf8Info(name), _constantPool.Utf8Info(builder.Build())));
       return this;
     }
 
-    public ClassBuilder WithMethod(AccessFlags flags, string name, string returnType, IEnumerable<string> types) => WithMethod(flags, name, x => x.WithReturnType(returnType).WithParameters(types));
-    public ClassBuilder WithMethod(AccessFlags flags, string name, Action<MethodDescriptorBuilder> builderAction)
+    public ClassBuilder WithMethod(AccessFlags flags, string name, string signature, string returnType, IEnumerable<string> types) => WithMethod(flags, name, signature, x => x.WithReturnType(returnType).WithParameters(types));
+    public ClassBuilder WithMethod(AccessFlags flags, string name, string signature, Action<MethodDescriptorBuilder> builderAction)
     {
       var builder = new MethodDescriptorBuilder();
       builderAction(builder);
-      _methods.Add(name, new MethodInfo(flags, _constantPool.Utf8Info(name), _constantPool.Utf8Info(builder.Build())));
+      _methods.Add(signature, new MethodInfo(flags, _constantPool.Utf8Info(name), _constantPool.Utf8Info(builder.Build())) { Name = name });
       return this;
     }
 
-    public ClassBuilder MethodBody(string name, string returnType, IEnumerable<(string type, string name)> parameters, Action<ByteCodeBuilder> builderAction)
+    public ClassBuilder MethodBody(string signature, string returnType, IEnumerable<(string type, string name)> parameters, Action<ByteCodeBuilder> builderAction)
     {
+      if (_methods.ContainsKey(signature) == false)
+        throw new ArgumentException($"can't create a method body, no method with the signature {signature} was defined use {nameof(WithMethod)} to define a method first");
+
+      var name = _methods[signature].Name;
       var method = new Method(name, returnType) { Parameters = parameters == null ? new Parameter[0] : parameters.Select(x => new Parameter { Name = x.name, Type = x.type }).ToArray() };
       var builder = new ByteCodeBuilder(this, method);
       builderAction(builder);
-      _methods[name].AddAttributes(builder.Build().ToArray());
+      _methods[signature].AddAttributes(builder.Build().ToArray());
       return this;
     }
 
@@ -100,8 +104,8 @@ namespace JavaSSTCompiler.Compiler.Builder
 
     private IEnumerable<AbstractAttribute> getAttributes()
     {
-      if (CodeFile != null) 
-        yield return new SourceFileAttribute(_constantPool, CodeFile); 
+      if (CodeFile != null)
+        yield return new SourceFileAttribute(_constantPool, CodeFile);
     }
 
     public byte[] Compile()
@@ -118,7 +122,7 @@ namespace JavaSSTCompiler.Compiler.Builder
       writer.Write(_superClass.Index);
       writer.Write((ushort)0); // no interfaces
       writer.Write((ushort)_fields.Count);
-      foreach (var field in _fields)
+      foreach (var field in _fields.Values)
         writer.Write(field.ToBytes());
       writer.Write((ushort)_methods.Count);
       foreach (var method in _methods.Values)
@@ -127,7 +131,7 @@ namespace JavaSSTCompiler.Compiler.Builder
       writer.Write((ushort)attributes.Length);
       foreach (var attribute in attributes)
         writer.Write(attribute.ToBytes());
-      
+
       return mem.ToArray();
     }
   }

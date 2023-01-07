@@ -43,10 +43,10 @@ namespace JavaSST.Compiler
         builder.WithField(AccessFlags.Public, field.Identifier, field.Type.Value);
 
       foreach (var method in clazz.Methods)
-        builder.WithMethod(AccessFlags.Public, method.Identifier, method.ReturnType.Value, method.Parameters.Select(x => x.Type.Value));
+        builder.WithMethod(AccessFlags.Public, method.Identifier, method.Signature, method.ReturnType.Value, method.Parameters.Select(x => x.Type.Value));
 
-      builder.WithMethod(AccessFlags.Public, "<init>", "void", null);
-      builder.MethodBody("<init>", "void", null, cb =>
+      builder.WithMethod(AccessFlags.Public, "<init>", "<init>()", "void", null);
+      builder.MethodBody("<init>()", "void", null, cb =>
       {
         cb.Aload(0);
         cb.InvokeSpecial(builder.ConstantPool.MethodRefInfo(builder.SuperClassInfo, "<init>", "void", null));
@@ -61,7 +61,7 @@ namespace JavaSST.Compiler
 
       foreach (var method in clazz.Methods)
       {
-        builder.MethodBody(method.Identifier, method.ReturnType.Value, method.Parameters.Select(x => (x.Type.Value, x.Identifier)), cb =>
+        builder.MethodBody(method.Signature, method.ReturnType.Value, method.Parameters.Select(x => (x.Type.Value, x.Identifier)), cb =>
         {
           var body = method.Body;
           foreach (var localVar in body.LocalVariables)
@@ -140,12 +140,12 @@ namespace JavaSST.Compiler
 
       foreach (var elseStatement in ifStatement.ElseStatements)
         compileStatement(builder, elseStatement);
-      builder.Goto(out var thanMarker);
+      builder.Goto(out var thenMarker);
       elseMarker.WriteRelative(builder.CurrentAddress);
 
       foreach (var thenStatement in ifStatement.ThenStatements)
         compileStatement(builder, thenStatement);
-      thanMarker.WriteRelative(builder.CurrentAddress);
+      thenMarker.WriteRelative(builder.CurrentAddress);
     }
 
 
@@ -199,7 +199,7 @@ namespace JavaSST.Compiler
       foreach (var arg in call.Arguments)
         compileExpression(builder, arg);
 
-      builder.InvokeVirtual(builder.ClassBuilder.GetMethodRef(call.Identifier));
+      builder.InvokeVirtual(builder.ClassBuilder.GetMethodRef(call.MethodSignature));
     }
 
     private void compileFactor(ByteCodeBuilder builder, IFactor factor)

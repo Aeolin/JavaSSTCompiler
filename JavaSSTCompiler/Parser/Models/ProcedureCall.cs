@@ -14,7 +14,7 @@ namespace JavaSST.Parser.Models
 
     
 
-
+    public string MethodSignature { get; set; }
     public List<Expression> Arguments { get; init; } = new List<Expression>();
   }
 }
