@@ -41,9 +41,9 @@ namespace JavaSST.Parser
       clazz.DynamicFields = parseDynamicFields(ctx).ToArray();
       clazz.Methods = parseMethods(ctx).ToArray();
       ctx.NextAndValidate("Expected } after class definition", TokenType.RCurly);
-      if (ctx.TokensLeft > 0) 
+      if (ctx.TokensLeft > 0)
         throw new ParserException(ctx.CurrentToken, "Expected no more tokens");
-      
+
       return clazz;
     }
 
@@ -131,10 +131,11 @@ namespace JavaSST.Parser
     /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private IEnumerable<IStatement> parseStatements(ParserContext ctx)
     {
-      while (ctx.Is(TokenType.RCurly, TokenType.Semicolon) == false)
+      // statement sequence must contain at least one sequence
+      do
       {
         yield return parseStatement(ctx);
-      }
+      } while (ctx.Is(TokenType.RCurly) == false);
     }
 
     /// <summary>
