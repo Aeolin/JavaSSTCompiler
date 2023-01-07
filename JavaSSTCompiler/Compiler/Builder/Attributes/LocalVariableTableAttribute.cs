@@ -1,4 +1,5 @@
-﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool;
+﻿using JavaSSTCompiler.Compiler.Builder.ByteCode;
+using JavaSSTCompiler.Compiler.Builder.ConstantPool;
 using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
 using JavaSSTCompiler.Compiler.Utils;
 using System;
@@ -31,6 +32,8 @@ namespace JavaSSTCompiler.Compiler.Builder.Attributes
       {
         _constantPool = pool;
       }
+
+      public LocalVariableTableAttributeBuilder WithVariable(LocalVariable localVariable) => WithVariable(localVariable.Name, "int", localVariable.Index, localVariable.FirstUsage, (ushort)(localVariable.LastUsage - localVariable.FirstUsage));
 
       public LocalVariableTableAttributeBuilder WithVariable(string name, string type, ushort index, ushort start, ushort length)
       {

@@ -17,7 +17,7 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
     private Method _method;
     private MemoryStream _code;
     private BigEndianBinaryWriter _writer;
-    private Dictionary<string, int> _localVariables = new Dictionary<string, int>();
+    private Dictionary<string, LocalVariable> _localVariables = new Dictionary<string, LocalVariable>();
 
     public ushort MaxStack { get; private set; }
     private ushort _currentStack = 0;
@@ -45,7 +45,7 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
       ClassBuilder = builder;
       MaxLocals = 1;
       foreach (var parameter in method.Parameters)
-        _localVariables[parameter.Name] = MaxLocals++;
+        _localVariables[parameter.Name] = new LocalVariable(parameter.Name, MaxLocals++, true, 0);
     }
 
     public ByteCodeBuilder DefineLocal(string name)
@@ -53,7 +53,7 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
       if (_localVariables.ContainsKey(name))
         throw new ArgumentException($"local variable with {name} already exists for {_method.Name}");
 
-      _localVariables[name] = MaxLocals++;
+      _localVariables[name] = new LocalVariable(name, MaxLocals++, false);
       return this;
     }
 
@@ -162,16 +162,18 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
 
     public ByteCodeBuilder StoreIntVariable(string variable, bool loadSelfRef = false)
     {
-      if (_localVariables.TryGetValue(variable, out var index))
+      if (_localVariables.TryGetValue(variable, out var localVariable))
       {
-        if (index < 4)
+        localVariable.IsInitialized = true;
+        localVariable.UpdateUsage(CurrentAddress);
+        if (localVariable.Index < 4)
         {
-          _writer.WriteByte((byte)(0x3b + index));
+          _writer.WriteByte((byte)(0x3b + localVariable.Index));
         }
         else
         {
           _writer.WriteByte(0x36);
-          _writer.WriteByte(index);
+          _writer.WriteByte(localVariable.Index);
         }
       }
       else
@@ -198,16 +200,20 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
 
     public ByteCodeBuilder LoadIntVariable(string variable)
     {
-      if (_localVariables.TryGetValue(variable, out var index))
+      if (_localVariables.TryGetValue(variable, out var localVariable))
       {
-        if (index < 4)
+        if (localVariable.IsInitialized == false)
+          throw new InvalidOperationException($"try to access value of local variable {localVariable.Name} before it has been initialized");
+
+        localVariable.UpdateUsage(CurrentAddress);
+        if (localVariable.Index < 4)
         {
-          _writer.WriteByte((byte)(0x1a + index));
+          _writer.WriteByte((byte)(0x1a + localVariable.Index));
         }
         else
         {
           _writer.WriteByte(0x15);
-          _writer.WriteByte((byte)index);
+          _writer.WriteByte((byte)localVariable.Index);
         }
       }
       else
@@ -267,8 +273,11 @@ namespace JavaSSTCompiler.Compiler.Builder.ByteCode
       codeAttribute.Code = _code.ToArray();
 
       var tableBuilder = LocalVariableTableAttribute.CreateBuilder(ClassBuilder.ConstantPool);
-      foreach (var local in _localVariables)
-        tableBuilder.WithVariable(local.Key, "int", (ushort)local.Value, 0, (ushort)_code.Length);
+      foreach (var localVariable in _localVariables.Values)
+      {
+        localVariable.LimitFirstUsage(CurrentAddress);
+        tableBuilder.WithVariable(localVariable);
+      }
 
       codeAttribute.Attributes = new AbstractAttribute[] { tableBuilder.Build() };
       yield return codeAttribute;
