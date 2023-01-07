@@ -1,12 +1,13 @@
 ﻿using JavaSST.Parser.Models;
 using JavaSST.Tokenizer;
 using JavaSSTCompiler.Compiler.Builder;
+using JavaSSTCompiler.Compiler.Builder.ByteCode;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static JavaSSTCompiler.Compiler.Builder.CodeBuilder;
+using static JavaSSTCompiler.Compiler.Builder.ByteCode.ByteCodeBuilder;
 
 namespace JavaSST.Compiler
 {
@@ -17,10 +18,13 @@ namespace JavaSST.Compiler
 
     }
 
-    public byte[] Compile(Class clazz)
+    public byte[] Compile(Class clazz, string codeFile = null)
     {
       var builder = ClassBuilder.Create();
       compileClass(builder, clazz);
+      if (codeFile != null)
+        builder.WithCodeFile(codeFile);
+      
       var data = builder.Compile();
       return data;
     }
@@ -72,7 +76,7 @@ namespace JavaSST.Compiler
       }
     }
 
-    private void compileStatement(CodeBuilder builder, IStatement statement)
+    private void compileStatement(ByteCodeBuilder builder, IStatement statement)
     {
       if (statement is Assignment assignment)
         compileAssignment(builder, assignment);
@@ -88,7 +92,7 @@ namespace JavaSST.Compiler
         throw new InvalidOperationException("Unknown statement");
     }
 
-    private void compileReturnStatement(CodeBuilder builder, ReturnStatement statement)
+    private void compileReturnStatement(ByteCodeBuilder builder, ReturnStatement statement)
     {
       if (statement.Expression == null)
       {
@@ -110,13 +114,13 @@ namespace JavaSST.Compiler
       { TokenType.Equal, CompareType.Equal },
     };
 
-    private void compileWhileStatement(CodeBuilder builder, WhileStatement whileStatement)
+    private void compileWhileStatement(ByteCodeBuilder builder, WhileStatement whileStatement)
     {
       builder.Goto(out var comparisonMarker);
-      var pos = builder.NextAddress;
+      var pos = builder.CurrentAddress;
       foreach (var statement in whileStatement.Statements)
         compileStatement(builder, statement);
-      comparisonMarker.WriteRelative(builder.NextAddress);
+      comparisonMarker.WriteRelative(builder.CurrentAddress);
       if (whileStatement.Condition.Right == null)
         throw new InvalidOperationException("Expected right side of condition inside if statement");
 
@@ -125,7 +129,7 @@ namespace JavaSST.Compiler
       builder.IfICmp(CMP_LOOKUP[whileStatement.Condition.Comparison.Value], pos);
     }
 
-    private void compileIfStatement(CodeBuilder builder, IfStatement ifStatement)
+    private void compileIfStatement(ByteCodeBuilder builder, IfStatement ifStatement)
     {
       if (ifStatement.Condition.Right == null)
         throw new InvalidOperationException("Expected right side of condition inside if statement");
@@ -137,29 +141,29 @@ namespace JavaSST.Compiler
       foreach (var elseStatement in ifStatement.ElseStatements)
         compileStatement(builder, elseStatement);
       builder.Goto(out var thanMarker);
-      elseMarker.WriteRelative(builder.NextAddress);
+      elseMarker.WriteRelative(builder.CurrentAddress);
 
       foreach (var thenStatement in ifStatement.ThenStatements)
         compileStatement(builder, thenStatement);
-      thanMarker.WriteRelative(builder.NextAddress);
+      thanMarker.WriteRelative(builder.CurrentAddress);
     }
 
 
 
-    private void compileAssignment(CodeBuilder builder, Assignment assignment)
+    private void compileAssignment(ByteCodeBuilder builder, Assignment assignment)
     {
       compileExpression(builder, assignment.Expression);
       builder.StoreIntVariable(assignment.Identifier);
     }
 
-    private void compileExpression(CodeBuilder builder, Expression expression)
+    private void compileExpression(ByteCodeBuilder builder, Expression expression)
     {
       compileSimpleExpression(builder, expression.Left);
       if (expression.Right != null)
         throw new InvalidOperationException("Expression can't have a comparison outside of an if or while statement");
     }
 
-    private void compileSimpleExpression(CodeBuilder builder, SimpleExpression expression)
+    private void compileSimpleExpression(ByteCodeBuilder builder, SimpleExpression expression)
     {
       compileTerm(builder, expression.Term);
       foreach (var term in expression.Terms)
@@ -174,7 +178,7 @@ namespace JavaSST.Compiler
       }
     }
 
-    private void compileTerm(CodeBuilder builder, Term term)
+    private void compileTerm(ByteCodeBuilder builder, Term term)
     {
       compileFactor(builder, term.Factor);
       foreach (var factor in term.Factors)
@@ -189,7 +193,7 @@ namespace JavaSST.Compiler
       }
     }
 
-    private void compileProcedureCall(CodeBuilder builder, ProcedureCall call)
+    private void compileProcedureCall(ByteCodeBuilder builder, ProcedureCall call)
     {
       builder.Aload(0);
       foreach (var arg in call.Arguments)
@@ -198,7 +202,7 @@ namespace JavaSST.Compiler
       builder.InvokeVirtual(builder.ClassBuilder.GetMethodRef(call.Identifier));
     }
 
-    private void compileFactor(CodeBuilder builder, IFactor factor)
+    private void compileFactor(ByteCodeBuilder builder, IFactor factor)
     {
       if (factor is Identifier variable)
         builder.LoadIntVariable(variable.Identifier);

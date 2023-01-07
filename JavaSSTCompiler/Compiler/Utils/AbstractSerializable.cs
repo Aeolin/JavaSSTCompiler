@@ -1,21 +1,15 @@
-﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using JavaSSTCompiler.Compiler.Builder;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace JavaSSTCompiler.Compiler.Builder
+namespace JavaSSTCompiler.Compiler.Utils
 {
   public abstract class AbstractSerializable
   {
-
     private static readonly Dictionary<Type, MethodInfo> WRITE = new Dictionary<Type, MethodInfo>();
 
     static AbstractSerializable()
     {
-      var methods = typeof(ConstantPoolBinaryWriter)
+      var methods = typeof(BigEndianBinaryWriter)
         .GetMethods(BindingFlags.Public | BindingFlags.Instance)
         .Where(x => x.Name == "Write" && x.GetParameters().Length == 1);
 
@@ -26,8 +20,8 @@ namespace JavaSSTCompiler.Compiler.Builder
     public virtual byte[] ToBytes()
     {
       using var mem = new MemoryStream();
-      using var writer = new ConstantPoolBinaryWriter(mem);
-      var properties = this.GetType()
+      using var writer = new BigEndianBinaryWriter(mem);
+      var properties = GetType()
         .GetProperties()
         .Select(x => (prop: x, attr: x.GetCustomAttribute<FieldAttribute>()))
         .Where(x => x.attr != null)
@@ -47,7 +41,6 @@ namespace JavaSSTCompiler.Compiler.Builder
           if (value == null)
             continue;
 
-
           if (elementType == typeof(byte))
           {
             writer.Write((byte[])value);
@@ -57,20 +50,18 @@ namespace JavaSSTCompiler.Compiler.Builder
             foreach (var item in value)
             {
               var obj = item;
-              if(elementType != obj.GetType() && elementType.IsAssignableTo(typeof(IConvertible)))
+              if (elementType != obj.GetType() && elementType.IsAssignableTo(typeof(IConvertible)))
                 obj = Convert.ChangeType(item, elementType);
 
               WRITE[elementType].Invoke(writer, new[] { obj });
             }
           }
-
         }
         else
         {
           var type = property.attr.Type ?? property.prop.PropertyType;
           WRITE[type].Invoke(writer, new[] { Convert.ChangeType(property.prop.GetValue(this), type) });
         }
-
       }
 
       return mem.ToArray();

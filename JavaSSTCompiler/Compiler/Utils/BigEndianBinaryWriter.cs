@@ -1,24 +1,29 @@
-﻿using System;
-using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
-namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
+namespace JavaSSTCompiler.Compiler.Utils
 {
-  public class ConstantPoolBinaryWriter : BinaryWriter
+  public class BigEndianBinaryWriter : BinaryWriter
   {
-    public ConstantPoolBinaryWriter(Stream stream) : base(stream)
+    public BigEndianBinaryWriter(Stream stream) : base(stream)
     {
     }
 
-    public ConstantPoolBinaryWriter(Stream stream, Encoding encoding) : base(stream, encoding)
+    public BigEndianBinaryWriter(Stream stream, Encoding encoding) : base(stream, encoding)
     {
     }
 
-    public ConstantPoolBinaryWriter(Stream stream, Encoding encoding, bool leaveOpen) : base(stream, encoding, leaveOpen)
+    public BigEndianBinaryWriter(Stream stream, Encoding encoding, bool leaveOpen) : base(stream, encoding, leaveOpen)
     {
+    }
+
+    public void WriteByte(byte value)
+    {
+      base.Write(value);
+    }
+
+    public void WriteByte(int value)
+    {
+      base.Write((byte)value);
     }
 
     public override void Write(short value)
@@ -100,7 +105,7 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
 
     public override void Write(string value)
     {
-      var pos = this.BaseStream.Position;
+      var pos = BaseStream.Position;
       Write((ushort)0);
       ushort count = 0;
       for (int i = 0; i < value.Length; i++)
@@ -111,19 +116,19 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
 
         count++;
         if (c >= 0x0001 && c <= 0x007F)
-        { 
+        {
           Write((byte)c);
         }
-        else if (c == 0x0000 || (c >= 0x0080 && c <= 0x07FF))
+        else if (c == 0x0000 || c >= 0x0080 && c <= 0x07FF)
         {
-          Write((byte)(0xC0 | (0x1F & (c >> 6))));
-          Write((byte)(0x80 | (0x3F & c)));
+          Write((byte)(0xC0 | 0x1F & c >> 6));
+          Write((byte)(0x80 | 0x3F & c));
         }
         else if (c >= 0x0800 && c <= 0xFFFF)
         {
-          Write((byte)(0xE0 | (0x0F & (c >> 12))));
-          Write((byte)(0x80 | (0x3F & (c >> 6))));
-          Write((byte)(0x80 | (0x3F & c)));
+          Write((byte)(0xE0 | 0x0F & c >> 12));
+          Write((byte)(0x80 | 0x3F & c >> 6));
+          Write((byte)(0x80 | 0x3F & c));
         }
         else if (c > 0xFFFF)
         {
@@ -131,14 +136,14 @@ namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
           Write((byte)value[i] >> 8);
           Write((byte)value[i]);
           Write((byte)0xED);
-          Write((byte)value[i+1] >> 8);
-          Write((byte)value[i+1]);
-        } 
+          Write((byte)value[i + 1] >> 8);
+          Write((byte)value[i + 1]);
+        }
       }
-      var newPos = this.BaseStream.Position;
-      this.BaseStream.Seek(pos, SeekOrigin.Begin);
+      var newPos = BaseStream.Position;
+      BaseStream.Seek(pos, SeekOrigin.Begin);
       Write(count);
-      this.BaseStream.Seek(newPos, SeekOrigin.Begin);
+      BaseStream.Seek(newPos, SeekOrigin.Begin);
     }
   }
 }

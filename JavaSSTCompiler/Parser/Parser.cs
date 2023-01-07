@@ -15,12 +15,23 @@ namespace JavaSST.Parser
 
     }
 
+    /// <summary>
+    /// Takes a stream of tokens and arranges them into a Model of type Class
+    /// </summary>
+    /// <param name="tokens">A stream of tokens</param>
+    /// <returns>A Class file representing the parsed tokens in a structure as specified by the JavaSST Bakus Naur Form</returns>
     public Class Parse(IEnumerable<Token> tokens)
     {
-      var ctx = new ParserContext(tokens.Where(x => x.Type != TokenType.Comment));
+      var ctx = new ParserContext(tokens.Where(x => x.Type != TokenType.Comment && x.Type != TokenType.Whitespace)); // ignore all whitespaces and comments
       return parseClass(ctx);
     }
 
+    /// <summary>
+    /// Parses the main Class file
+    /// </summary>
+    /// <param name="ctx">ParserContext</param>
+    /// <returns>parsed Class</returns>
+    /// <exception cref="ParserException">Throws exception if tokens are left after class was parsed</exception>
     private Class parseClass(ParserContext ctx)
     {
       ctx.NextAndValidate("Expected Class definition", TokenType.Class);
@@ -36,6 +47,12 @@ namespace JavaSST.Parser
       return clazz;
     }
 
+    /// <summary>
+    /// Parse the final fields speciefied at the start of a JavaSST class
+    /// </summary>
+    /// <param name="ctx">ParserContext</param>
+    /// <returns>An IEnumerable of parsed FinalField models</returns>
+    /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private IEnumerable<FinalField> parseFinalFields(ParserContext ctx)
     {
       while (ctx.Is(TokenType.Final))
@@ -51,6 +68,12 @@ namespace JavaSST.Parser
       }
     }
 
+    /// <summary>
+    /// Parse the dynamic fields speciefied at the start of a JavaSST class
+    /// </summary>
+    /// <param name="ctx">ParserContext</param>
+    /// <returns>An IEnumerable of parsed DynamicFields models</returns>
+    /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private IEnumerable<DynamicField> parseDynamicFields(ParserContext ctx)
     {
       while (ctx.Is(TokenType.Type))
@@ -63,9 +86,15 @@ namespace JavaSST.Parser
       }
     }
 
+    /// <summary>
+    /// Parse all methods specified inside a JavaSST class
+    /// </summary>
+    /// <param name="ctx">ParserContext</param>
+    /// <returns>An IEnumerable of parsed Method models</returns>
+    /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private IEnumerable<Method> parseMethods(ParserContext ctx)
     {
-      while (ctx.Is(TokenType.Public))
+      while (ctx.Is(TokenType.Public)) // all methods start with the public keyword
       {
         ctx.NextToken();
         var type = ctx.NextAndValidate("expected method return type", TokenType.Void, TokenType.Type);
@@ -80,6 +109,12 @@ namespace JavaSST.Parser
       }
     }
 
+    /// <summary>
+    /// Parses the body of a method
+    /// </summary>
+    /// <param name="ctx">ParserContext</param>
+    /// <returns>A MethodBody model containing parsed information of the local fields and statements which make up the method</returns>
+    /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private MethodBody parseMethodBody(ParserContext ctx)
     {
       var body = new MethodBody();
@@ -88,6 +123,12 @@ namespace JavaSST.Parser
       return body;
     }
 
+    /// <summary>
+    /// Parses a sequence of statement 
+    /// </summary>
+    /// <param name="ctx">ParseContext</param>
+    /// <returns>IEnumerable of Statements</returns>
+    /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private IEnumerable<IStatement> parseStatements(ParserContext ctx)
     {
       while (ctx.Is(TokenType.RCurly, TokenType.Semicolon) == false)
@@ -96,9 +137,15 @@ namespace JavaSST.Parser
       }
     }
 
+    /// <summary>
+    /// Parses a single statement
+    /// </summary>
+    /// <param name="ctx">ParseContext</param>
+    /// <returns></returns>
+    /// <exception cref="ParserException">Throws exception if unexpected structures occur</exception>
     private IStatement parseStatement(ParserContext ctx)
     {
-      if (ctx.Is(TokenType.Identifier))
+      if (ctx.Is(TokenType.Identifier)) // Assignement and ProcedureCall Statements start with an identifier
       {
         var identifier = ctx.NextToken();
         if (ctx.Is(TokenType.Assign))

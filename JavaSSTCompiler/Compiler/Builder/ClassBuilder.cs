@@ -1,9 +1,11 @@
 ﻿using JavaSST.Compiler.Models;
 using JavaSSTCompiler.Compiler.Builder.Attributes;
+using JavaSSTCompiler.Compiler.Builder.ByteCode;
 using JavaSSTCompiler.Compiler.Builder.ConstantPool;
 using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
 using JavaSSTCompiler.Compiler.Builder.Structs;
 using JavaSSTCompiler.Compiler.Models;
+using JavaSSTCompiler.Compiler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,7 @@ namespace JavaSSTCompiler.Compiler.Builder
   {
     public string Name { get; private set; }
     public string SuperClass { get; private set; }
+    public string CodeFile { get; private set; }
     public AccessFlags AccessFlags { get; private set; } = AccessFlags.Public;
     
     private ClassInfo _thisClass;
@@ -80,22 +83,32 @@ namespace JavaSSTCompiler.Compiler.Builder
       return this;
     }
 
-    public ClassBuilder MethodBody(string name, string returnType, IEnumerable<(string type, string name)> parameters, Action<CodeBuilder> builderAction)
+    public ClassBuilder MethodBody(string name, string returnType, IEnumerable<(string type, string name)> parameters, Action<ByteCodeBuilder> builderAction)
     {
       var method = new Method(name, returnType) { Parameters = parameters == null ? new Parameter[0] : parameters.Select(x => new Parameter { Name = x.name, Type = x.type }).ToArray() };
-      var builder = new CodeBuilder(this, method);
+      var builder = new ByteCodeBuilder(this, method);
       builderAction(builder);
-      var code = builder.Build();
-      var attribute = new CodeAttribute(_constantPool) { Code = code, MaxLocals = builder.MaxLocals, MaxStack = builder.MaxStack };
-      _methods[name].AddAttribute(attribute);
+      _methods[name].AddAttributes(builder.Build().ToArray());
       return this;
     }
 
+    public ClassBuilder WithCodeFile(string codeFile)
+    {
+      CodeFile = codeFile;
+      return this;
+    }
+
+    private IEnumerable<AbstractAttribute> getAttributes()
+    {
+      if (CodeFile != null) 
+        yield return new SourceFileAttribute(_constantPool, CodeFile); 
+    }
 
     public byte[] Compile()
     {
       using var mem = new MemoryStream();
-      using var writer = new ConstantPoolBinaryWriter(mem);
+      using var writer = new BigEndianBinaryWriter(mem);
+      var attributes = getAttributes().ToArray();         // generate attributes before constant pool is saved      
       writer.Write(0xCAFEBABE);
       writer.Write((ushort)0);
       writer.Write((ushort)51);
@@ -110,7 +123,11 @@ namespace JavaSSTCompiler.Compiler.Builder
       writer.Write((ushort)_methods.Count);
       foreach (var method in _methods.Values)
         writer.Write(method.ToBytes());
-      writer.Write((ushort)0); // no attributes
+
+      writer.Write((ushort)attributes.Length);
+      foreach (var attribute in attributes)
+        writer.Write(attribute.ToBytes());
+      
       return mem.ToArray();
     }
   }

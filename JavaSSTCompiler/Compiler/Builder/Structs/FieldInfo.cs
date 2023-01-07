@@ -1,4 +1,5 @@
 ﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
+using JavaSSTCompiler.Compiler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace JavaSSTCompiler.Compiler.Builder.Structs
 {
-  public class FieldInfo : AbstractSerializable
+    public class FieldInfo : AbstractSerializable
   {
     [Field(0)]
     public ushort AccessFlags { get; set; }

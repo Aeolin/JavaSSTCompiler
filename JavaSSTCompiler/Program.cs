@@ -31,7 +31,7 @@ namespace JavaSST
       var parser = new Parser.Parser();
       var ast = parser.Parse(tokens);
       var compiler = new Compiler.Compiler();
-      var bytecode = compiler.Compile(ast);
+      var bytecode = compiler.Compile(ast, input.Name);
       File.WriteAllBytes(output.FullName, bytecode);
     }
   }

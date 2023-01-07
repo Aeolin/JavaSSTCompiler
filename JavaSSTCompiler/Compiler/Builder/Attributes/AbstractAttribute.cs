@@ -1,5 +1,6 @@
 ﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool;
 using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
+using JavaSSTCompiler.Compiler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace JavaSSTCompiler.Compiler.Builder.Attributes
 {
-  public class AbstractAttribute : AbstractSerializable
+    public class AbstractAttribute : AbstractSerializable
   {
     public ushort AttributeNameIndex { get; init; }
 
@@ -21,7 +22,7 @@ namespace JavaSSTCompiler.Compiler.Builder.Attributes
     public override byte[] ToBytes()
     {
       using var mem = new MemoryStream();
-      using var writer = new ConstantPoolBinaryWriter(mem);
+      using var writer = new BigEndianBinaryWriter(mem);
       writer.Write(AttributeNameIndex);
       var bytes = base.ToBytes();
       writer.Write((uint)bytes.LongLength);

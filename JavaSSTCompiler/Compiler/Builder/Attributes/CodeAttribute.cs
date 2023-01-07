@@ -1,4 +1,5 @@
 ﻿using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
+using JavaSSTCompiler.Compiler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace JavaSSTCompiler.Compiler.Builder.Attributes
 {
-  public class CodeAttribute : AbstractAttribute
+    public class CodeAttribute : AbstractAttribute
   {
     [Field(1)]
     public ushort MaxStack { get; set; }

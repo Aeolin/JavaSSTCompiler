@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace JavaSST.Tokenizer
 {
+  /// <summary>
+  /// All Tokens recognized by the tokenizer, and their corresponding regular expressions.
+  /// Rules will be checked in the same order as enum values
+  /// </summary>
   public enum TokenType
   {
     [TokenizerRule(@"\/\*[\S\s]*?\*\/")]

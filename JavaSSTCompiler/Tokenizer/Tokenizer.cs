@@ -13,6 +13,10 @@ namespace JavaSST.Tokenizer
     private static readonly Dictionary<TokenType, Regex> RULES = new Dictionary<TokenType, Regex>();
     public bool SkipWhitespaces { get; set; }
 
+    /// <summary>
+    /// Constructs a lookup table of TokenTypes and their corresponding Regexes.
+    /// Informations are pulled from the TokenizerRule attributes inside the TokenType enum
+    /// </summary>
     static Tokenizer()
     {
       RULES.Clear();
@@ -20,11 +24,21 @@ namespace JavaSST.Tokenizer
         RULES[token] = new Regex("^"+ token.GetRule().Regex, RegexOptions.Compiled);
     }
 
+    /// <summary>
+    /// Constrcuts a new Tokenizer
+    /// </summary>
+    /// <param name="skipWhitespaces">wheter the TokenType.Whitespace should be emitted or not</param>
     public Tokenizer(bool skipWhitespaces = true)
     {
       SkipWhitespaces = skipWhitespaces;
     }
 
+    /// <summary>
+    /// Tokenizes the given input stream into the tokens specified in the TokenType enum
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public IEnumerable<Token> Tokenize(Stream input)
     {
       using var reader = new StreamReader(input);
@@ -33,7 +47,7 @@ namespace JavaSST.Tokenizer
       while (source.Length > 0)
       {
         var ruleFound = false;
-        foreach (var rule in RULES)
+        foreach (var rule in RULES) // iterate over all available rules until a matching one is found
         {
           var match = rule.Value.Match(source);
           if (match.Success)

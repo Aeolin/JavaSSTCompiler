@@ -1,4 +1,5 @@
 ﻿using JavaSST;
+using JavaSSTCompiler.Compiler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace JavaSSTCompiler.Compiler.Builder.ConstantPool
 {
-  public class AbstractConstantPoolInfo : AbstractSerializable
+    public class AbstractConstantPoolInfo : AbstractSerializable
   {
     [Field(-1, typeof(byte))]
     public ConstantPoolTag Tag { get; init; }

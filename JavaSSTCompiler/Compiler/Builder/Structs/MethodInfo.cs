@@ -1,5 +1,6 @@
 ﻿using JavaSSTCompiler.Compiler.Builder.Attributes;
 using JavaSSTCompiler.Compiler.Builder.ConstantPool.Infos;
+using JavaSSTCompiler.Compiler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace JavaSSTCompiler.Compiler.Builder.Structs
 {
-  public class MethodInfo : AbstractSerializable
+    public class MethodInfo : AbstractSerializable
   {
     [Field(0, typeof(ushort))]
     public ushort AccessFlags { get; init; }
@@ -30,22 +31,18 @@ namespace JavaSSTCompiler.Compiler.Builder.Structs
       DescriptorIndex = descriptorInfo.Index;
     }
 
-    public void AddAttribute(AbstractAttribute attribute)
+
+    public void AddAttributes(params AbstractAttribute[] attributes)
     {
       if (Attributes == null)
       {
-        Attributes = new AbstractAttribute[1];
-        Attributes[0] = attribute;
+        Attributes = attributes;
       }
       else
       {
-        var newAttributes = new AbstractAttribute[Attributes.Length + 1];
-        for (int i = 0; i < Attributes.Length; i++)
-        {
-          newAttributes[i] = Attributes[i];
-        }
-        newAttributes[^1] = attribute;
-        Attributes = newAttributes;
+        var newAttributes = new AbstractAttribute[Attributes.Length + attributes.Length];
+        Array.Copy(Attributes, newAttributes, Attributes.Length);
+        Array.Copy(attributes, 0, newAttributes, Attributes.Length, attributes.Length);
       }
     }
   }
