@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JavaSST.Parser.Models
 {
-  internal class IfStatement : IStatement
+  public class IfStatement : IStatement
   {
     public Expression Condition { get; set; }
     public IStatement[] ThenStatements { get; set; }
